@@ -15,11 +15,28 @@
       </div>
       <button id="pingButton">Ping</button>
       <script>
-        document.getElementById('pingButton').addEventListener('click', function() {
-          this.textContent = 'Pong';
-          document.getElementById('message').textContent = '¡Respuesta recibida!';
+        document.getElementById('pingButton').addEventListener('click', () => {
+          const messageDiv = document.getElementById('message');
+          messageDiv.textContent = 'Consultando...';
+      
+          fetch('http://localhost:3030/ping')
+            .then(response => {
+              if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then(data => {
+              messageDiv.textContent = data.message;
+            })
+            .catch(error => {
+              messageDiv.textContent = 'No se pudo conectar al servidor. Revisa la URL o si está corriendo.';
+              console.error('Error al hacer fetch:', error);
+            });
         });
       </script>
+      
+      
     </div>
   </body>
 </html>
