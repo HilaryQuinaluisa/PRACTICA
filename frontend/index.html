@@ -1,25 +1,167 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="./src/style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
+    <title>Biblioteca - Gestión de Libros</title>
   </head>
   <body>
     <div id="app">
-      <h1>Ping al Web Services</h1>
-      <div class="card">
-        <p>Message:</p>
-        <div id="message">Esperando...</div>
+      <h1>Biblioteca - Gestión de Libros</h1>
+      
+      <!-- Sección para listar libros -->
+      <div class="section">
+        <h2>Lista de Libros</h2>
+        <button id="getBooksBtn">Obtener Libros</button>
+        <div id="booksList"></div>
       </div>
-      <button id="pingButton">Ping</button>
+
+      <!-- Sección para agregar nuevo libro -->
+      <div class="section">
+        <h2>Agregar Nuevo Libro</h2>
+        <div class="form-group">
+          <input type="text" id="bookTitle" placeholder="Título del libro">
+        </div>
+        <div class="form-group">
+          <input type="text" id="bookAuthor" placeholder="Autor del libro">
+        </div>
+        <button id="addBookBtn">Agregar Libro</button>
+        <div id="addBookResult"></div>
+      </div>
+
+      <!-- Sección para buscar por autor -->
+      <div class="section">
+        <h2>Buscar por Autor</h2>
+        <div class="form-group">
+          <input type="text" id="searchAuthor" placeholder="Nombre del autor">
+        </div>
+        <button id="searchBtn">Buscar</button>
+        <div id="searchResults"></div>
+      </div>
+
       <script>
+        const API_BASE_URL = 'http://localhost:3000/libros';
         
-        document.getElementById('pingButton').addEventListener('click', function() {
-          this.textContent = 'Pong';
-          document.getElementById('message').textContent = '¡Respuesta recibida!';
+        // Elementos del DOM
+        const getBooksBtn = document.getElementById('getBooksBtn');
+        const booksList = document.getElementById('booksList');
+        const addBookBtn = document.getElementById('addBookBtn');
+        const bookTitle = document.getElementById('bookTitle');
+        const bookAuthor = document.getElementById('bookAuthor');
+        const addBookResult = document.getElementById('addBookResult');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchAuthor = document.getElementById('searchAuthor');
+        const searchResults = document.getElementById('searchResults');
+
+        // Función para mostrar libros
+        function displayBooks(books, container) {
+          if (books.length === 0) {
+            container.innerHTML = '<p>No se encontraron libros</p>';
+            return;
+          }
+          
+          const html = books.map(book => `
+            <div class="book-card">
+              <h3>${book.titulo}</h3>
+              <p><strong>Autor:</strong> ${book.autor}</p>
+              <p><strong>ID:</strong> ${book.id}</p>
+              <button onclick="deleteBook(${book.id})">Eliminar</button>
+            </div>
+          `).join('');
+          
+          container.innerHTML = html;
+        }
+
+        // Obtener todos los libros
+        getBooksBtn.addEventListener('click', async () => {
+          try {
+            const response = await fetch(API_BASE_URL);
+            const books = await response.json();
+            displayBooks(books, booksList);
+          } catch (error) {
+            booksList.innerHTML = `<p class="error">Error al obtener libros: ${error.message}</p>`;
+          }
         });
+
+        // Agregar nuevo libro
+        addBookBtn.addEventListener('click', async () => {
+          const title = bookTitle.value.trim();
+          const author = bookAuthor.value.trim();
+          
+          if (!title || !author) {
+            addBookResult.innerHTML = '<p class="error">Título y autor son requeridos</p>';
+            return;
+          }
+          
+          try {
+            const response = await fetch(API_BASE_URL, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                titulo: title,
+                autor: author
+              })
+            });
+            
+            if (response.ok) {
+              const newBook = await response.json();
+              addBookResult.innerHTML = `
+                <p class="success">Libro agregado exitosamente!</p>
+                <pre>${JSON.stringify(newBook, null, 2)}</pre>
+              `;
+              bookTitle.value = '';
+              bookAuthor.value = '';
+              // Actualizar la lista
+              getBooksBtn.click();
+            } else {
+              throw new Error('Error al agregar libro');
+            }
+          } catch (error) {
+            addBookResult.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+          }
+        });
+
+        // Buscar por autor
+        searchBtn.addEventListener('click', async () => {
+          const author = searchAuthor.value.trim();
+          
+          if (!author) {
+            searchResults.innerHTML = '<p class="error">Ingrese un autor para buscar</p>';
+            return;
+          }
+          
+          try {
+            const response = await fetch(`${API_BASE_URL}?autor=${encodeURIComponent(author)}`);
+            const books = await response.json();
+            displayBooks(books, searchResults);
+          } catch (error) {
+            searchResults.innerHTML = `<p class="error">Error al buscar: ${error.message}</p>`;
+          }
+        });
+
+        // Función para eliminar libro (global para que funcione en los botones dinámicos)
+        window.deleteBook = async (id) => {
+          if (!confirm('¿Está seguro de eliminar este libro?')) return;
+          
+          try {
+            const response = await fetch(`${API_BASE_URL}/${id}`, {
+              method: 'DELETE'
+            });
+            
+            if (response.ok) {
+              alert('Libro eliminado exitosamente');
+              // Actualizar la lista
+              getBooksBtn.click();
+            } else {
+              throw new Error('Error al eliminar libro');
+            }
+          } catch (error) {
+            alert(`Error: ${error.message}`);
+          }
+        };
       </script>
     </div>
   </body>
