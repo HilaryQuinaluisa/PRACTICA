@@ -1,21 +1,16 @@
-# BACKEND
+// Web Service para Gestión de Libros (Node.js + Docker + AWS)
 
+// Este proyecto consiste en un Web Service RESTful desarrollado con Node.js y Express
+// para gestionar libros en una biblioteca. El backend se despliega en una instancia Ubuntu
+// (por ejemplo, en AWS EC2) usando Docker.
 
-## COMSTRUIR Y EJECUTAR LOS CONTENEDORES 
-### 1. Instalar Docker en Ubuntu
+// ------------------------------------------------------
+// Cómo construir y ejecutar los contenedores
+// ------------------------------------------------------
 
-sudo apt update
-sudo apt install apt-transport-https ca-certificates curl software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu focal stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt update
-sudo apt install docker-ce
-sudo systemctl start docker
-sudo systemctl enable docker
+// 1. Crear el archivo Dockerfile en la carpeta /backend:
 
-
-### 2. Crear un `Dockerfile` en la carpeta `backend`
-
+/*
 FROM node:20.1-alpine3.18
 WORKDIR /app
 COPY package.json .
@@ -23,60 +18,143 @@ RUN npm install
 COPY index.js .
 EXPOSE 3000
 CMD ["node", "index.js"]
+*/
 
-Guarda este archivo como `Dockerfile`.
+// 2. Construir la imagen Docker:
 
-### 3. Construir la imagen Docker
+// cd backend
+// sudo docker build -t biblioteca-libros .
 
-Desde la carpeta `backend`:
+// 3. Ejecutar el contenedor:
 
-sudo docker build -t node-hello .
+// sudo docker run -d -p 3000:3000 --name biblioteca --restart on-failure biblioteca-libros:latest
 
-Esto crea una imagen llamada `node-hello`.
+// -p 3000:3000 -> Mapea el puerto 3000 del contenedor al del host.
+// --restart on-failure -> Reinicia el contenedor si falla.
 
-### 4. Ejecutar el contenedor
+// ------------------------------------------------------
+// Endpoints del Web Service
+// ------------------------------------------------------
 
-sudo docker run -d -p 3000:3000 --name hello --restart on-failure node-hello:latest
+// Todos los datos se almacenan en memoria.
 
-* `-d`: Modo desacoplado
-* `-p 3000:3000`: Mapea el puerto del contenedor al de la máquina
-* `--name hello`: Asigna nombre al contenedor
-* `--restart on-failure`: Reinicia si falla
-* `node-hello:latest`: Imagen usada
+// GET /libros
+//     Devuelve todos los libros.
 
-### 5. Verificar ejecución
+// GET /libros/:id
+//     Devuelve un libro por su ID.
 
-Abre el navegador y accede a:
+// POST /libros
+//     Crea un nuevo libro (requiere "titulo" y "autor").
 
-http://<IP_DE_TU_INSTANCIA>:3000
+// PUT /libros/:id
+//     Actualiza un libro existente por su ID.
 
-## COMANDOS UTILIZADOS
+// DELETE /libros/:id
+//     Elimina un libro por su ID.
 
-### Instalación de Node.js
+// GET /libros?autor=nombre
+//     Devuelve libros filtrados por autor.
 
-sudo apt purge nodejs              # (opcional) Eliminar versión antigua
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt install -y nodejs
-node -v                            # Verificar versión
+// ------------------------------------------------------
+// Ejemplos de Request / Response
+// ------------------------------------------------------
 
-### Git
+// GET /libros
+/*
+[
+  {
+    "id": 1,
+    "titulo": "Cien años de soledad",
+    "autor": "Gabriel García Márquez"
+  }
+]
+*/
 
-sudo apt install git
-git clone <URL_DEL_REPOCITORIO>
-cd backend
-git status
-git add .
-git commit -m "mensaje"
-git pull origin main
-git push origin main
+// GET /libros/1
+/*
+{
+  "id": 1,
+  "titulo": "Cien años de soledad",
+  "autor": "Gabriel García Márquez"
+}
+*/
+
+// POST /libros
+/*
+Request:
+{
+  "titulo": "Rayuela",
+  "autor": "Julio Cortázar"
+}
+
+Response:
+{
+  "id": 2,
+  "titulo": "Rayuela",
+  "autor": "Julio Cortázar"
+}
+*/
+
+// PUT /libros/2
+/*
+Request:
+{
+  "titulo": "Rayuela (edición revisada)",
+  "autor": "Julio Cortázar"
+}
+
+Response:
+{
+  "id": 2,
+  "titulo": "Rayuela (edición revisada)",
+  "autor": "Julio Cortázar"
+}
+*/
+
+// DELETE /libros/2
+/*
+{
+  "mensaje": "Libro eliminado correctamente"
+}
+*/
+
+// GET /libros?autor=Julio Cortázar
+/*
+[
+  {
+    "id": 2,
+    "titulo": "Rayuela",
+    "autor": "Julio Cortázar"
+  }
+]
+*/
+
+// ------------------------------------------------------
+// Comandos Docker utilizados
+// ------------------------------------------------------
+
+// Construir imagen Docker
+// sudo docker build -t biblioteca-libros .
+
+// Ejecutar contenedor
+// sudo docker run -d -p 3000:3000 --name biblioteca --restart on-failure biblioteca-libros:latest
+
+// Ver contenedores en ejecución
+// sudo docker ps
+
+// Ver logs del contenedor
+// sudo docker logs biblioteca
+
+// Detener contenedor
+// sudo docker stop biblioteca
+
+// Reiniciar contenedor
+// sudo docker start biblioteca
 
 
-### Node.js en local 
+// ------------------------------------------------------
 
-npm install
-node index.js
-
-
-* Docker permite que la app se ejecute en segundo plano, sin necesidad de mantener abierta la terminal.
-* El archivo `index.js` se ejecuta automáticamente gracias a Docker.
-* Es recomendable tener configurada una Elastic IP para evitar cambios en la IP pública.
+// - El servicio se mantiene corriendo incluso si se cierra la terminal gracias a Docker.
+// - Asegúrate de que el puerto esté abierto en el grupo de seguridad de AWS.
+// - Puedes usar curl o Postman para probar los endpoints.
