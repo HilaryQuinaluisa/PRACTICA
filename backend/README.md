@@ -1,6 +1,6 @@
 # Web Service para Gestión de Libros (Node.js + Docker + AWS)
 
-Este proyecto consiste en un Web Service RESTful desarrollado con Node.js y Express para gestionar libros en una biblioteca. El backend se despliega en una instancia Ubuntu (por ejemplo, en AWS EC2) usando Docker.
+Este proyecto consiste en un Web Service RESTful desarrollado con Node.js y Express para gestionar libros en una biblioteca. El backend se despliega en una instancia Ubuntu en AWS EC2 usando Docker.
 
 ## Cómo construir y ejecutar los contenedores
 
@@ -178,7 +178,7 @@ sudo docker stop biblioteca
 sudo docker start biblioteca
 ```
 
-## Notas
+
 
 - El servicio se mantiene corriendo incluso si se cierra la terminal gracias a Docker.
 - Asegúrate de que el puerto esté abierto en el grupo de seguridad de AWS.
