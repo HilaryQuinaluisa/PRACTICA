@@ -1,75 +1,86 @@
+// Importar Express
 const express = require('express');
-const cors = require('cors');
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+// Inicializar la aplicación Express
+const server = express();
+// 🧩 Esta línea es obligatoria para parsear JSON
+server.use(express.json());
 
-// Datos en memoria
+// Definir el puerto para el servidor
+const PORT = 3030;
+
 let libros = [
-    { id: 1, titulo: 'Cien años de soledad', autor: 'Gabriel García Márquez' },
-    { id: 2, titulo: 'El principito', autor: 'Antoine de Saint-Exupéry' }
+  { id: 1, titulo: "AWS", autor: "Luciano Torres" },
+  { id: 2, titulo: "Base de datos", autor: "Andy Becerra" },
+  { id: 3, titulo: "Sistemas Operativos", autor: "Antonio Lema" }
 ];
 
-// 1. GET /libros -> Todos los libros
-app.get('/libros', (req, res) => {
-    if (req.query.autor) {
-        const librosFiltrados = libros.filter(l => 
-            l.autor.toLowerCase().includes(req.query.autor.toLowerCase())
-        );
-        return res.json(librosFiltrados);
-    }
-    res.json(libros);
+// Ruta para obtener todos los libros
+server.get('/libros', (req, res) => {
+  res.json(libros);
 });
 
-// 2. GET /libros/:id -> Libro por ID
-app.get('/libros/:id', (req, res) => {
-    const libro = libros.find(l => l.id === parseInt(req.params.id));
-    if (!libro) return res.status(404).send('Libro no encontrado');
+// Ruta para buscar libro por ID
+server.get('/libros/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const libro = libros.find(l => l.id === id);
+
+  if (libro) {
     res.json(libro);
+  } else {
+    res.status(404).json({ error: 'Libro no encontrado' });
+  }
 });
 
-// 3. POST /libros -> Crear nuevo libro
-app.post('/libros', (req, res) => {
-    if (!req.body.titulo || !req.body.autor) {
-        return res.status(400).send('Título y autor son requeridos');
-    }
-    
-    const libro = {
-        id: libros.length + 1,
-        titulo: req.body.titulo,
-        autor: req.body.autor
-    };
-    
-    libros.push(libro);
-    res.status(201).json(libro);
+// Crear un nuevo libro
+server.post('/libros', (req, res) => {
+  const { titulo, autor } = req.body;
+
+  if (!titulo || !autor) {
+    return res.status(400).json({ mensaje: "Se requiere título y autor" });
+  }
+
+  const nuevoLibro = {
+    id: libros.length > 0 ? libros[libros.length - 1].id + 1 : 1,
+    titulo,
+    autor
+  };
+
+  libros.push(nuevoLibro);
+  res.status(201).json(nuevoLibro);
 });
 
-// 4. PUT /libros/:id -> Actualizar libro
-app.put('/libros/:id', (req, res) => {
-    const libro = libros.find(l => l.id === parseInt(req.params.id));
-    if (!libro) return res.status(404).send('Libro no encontrado');
-    
-    if (!req.body.titulo || !req.body.autor) {
-        return res.status(400).send('Título y autor son requeridos');
-    }
-    
-    libro.titulo = req.body.titulo;
-    libro.autor = req.body.autor;
-    res.json(libro);
+// Actualizar un libro por ID
+server.put('/libros/:id', (req, res) => {
+  const libro = libros.find(l => l.id === parseInt(req.params.id));
+  if (!libro) {
+    return res.status(404).json({ mensaje: "Libro no encontrado" });
+  }
+
+  libro.titulo = req.body.titulo || libro.titulo;
+  libro.autor = req.body.autor || libro.autor;
+  res.json(libro);
 });
 
-// 5. DELETE /libros/:id -> Eliminar libro
-app.delete('/libros/:id', (req, res) => {
-    const libroIndex = libros.findIndex(l => l.id === parseInt(req.params.id));
-    if (libroIndex === -1) return res.status(404).send('Libro no encontrado');
-    
-    libros.splice(libroIndex, 1);
-    res.status(204).send();
+// Eliminar un libro por ID
+server.delete('/libros/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const indice = libros.findIndex(libro => libro.id === id);
+
+  if (indice === -1) {
+    return res.status(404).json({ mensaje: "Libro no encontrado" });
+  }
+
+  libros.splice(indice, 1);
+  res.json({ mensaje: "Libro eliminado correctamente" });
 });
 
-// Iniciar servidor
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-    console.log(`Servidor de libros corriendo en el puerto ${PORT}`);
+// Ruta raíz
+server.get('/', (req, res) => {
+  res.send('¡Hola Mundo con Node.js y Express!');
+});
+
+// Iniciar el servidor
+server.listen(PORT, () => {
+  console.log(`Servidor ejecutándose en http://localhost:${PORT}`);
 });
