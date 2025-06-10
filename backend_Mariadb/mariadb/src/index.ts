@@ -1,14 +1,19 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
+import ping from './ping/ping.js'
+import greet from './greet/greet.js'
 
-const app = new Hono()
+const server = new Hono()
 
-app.get('/', (c) => {
+server.get('/', (c) => {
   return c.text('Hello Hono!')
 })
 
+server.route('/', ping)
+server.route('/', greet)
+
 serve({
-  fetch: app.fetch,
+  fetch: server.fetch,
   port: 3000
 }, (info) => {
   console.log(`Server is running on http://localhost:${info.port}`)
