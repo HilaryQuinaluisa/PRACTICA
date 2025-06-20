@@ -16,7 +16,7 @@ const dbConfig = {
   database: process.env.DB_NAME,
 }
 
-// Declara la variable de conexión
+// Declara la variable de conexións
 let connection: any
 
 // Función asincrónica que establece la conexión a la base de datos
